@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, 
   LogOut, 
@@ -27,6 +27,10 @@ const IconMap = {
 };
 
 export default function App() {
+  useEffect(() => {
+    console.log("EduQuiz Pro initialized");
+  }, []);
+
   const [phase, setPhase] = useState<QuizPhase>('MENU');
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -200,8 +204,12 @@ export default function App() {
                       onClick={() => selectSubject(subject)}
                       className="group p-8 bg-white border border-slate-200 rounded-[2.5rem] text-left hover:border-indigo-600 hover:shadow-2xl hover:shadow-indigo-100/10 transition-all flex flex-col gap-8 cursor-pointer"
                     >
-                      <div className={`w-14 h-14 bg-${subject.color}-500 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:rotate-6`}>
-                        <Icon className="w-7 h-7" />
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:rotate-6
+                        ${subject.color === 'indigo' ? 'bg-indigo-500 shadow-indigo-100/50' : 
+                          subject.color === 'amber' ? 'bg-amber-500 shadow-amber-100/50' : 
+                          'bg-emerald-500 shadow-emerald-100/50'}
+                      `}>
+                        {Icon && <Icon className="w-7 h-7" />}
                       </div>
                       <div className="space-y-3">
                         <h3 className="text-xl font-bold text-slate-800 tracking-tight">{subject.name}</h3>
