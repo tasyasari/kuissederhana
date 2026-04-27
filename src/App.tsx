@@ -38,6 +38,10 @@ export default function App() {
     return QUIZ_QUESTIONS[selectedSubject.id] || [];
   }, [selectedSubject]);
 
+  const currentQuestion = useMemo(() => {
+    return questions[currentQuestionIndex] || null;
+  }, [questions, currentQuestionIndex]);
+
   const handleStartProcess = () => {
     setPhase('SUBJECT_SELECTION');
   };
@@ -51,6 +55,7 @@ export default function App() {
   };
 
   const handleAnswerSelect = (optionIndex: number) => {
+    if (!questions.length) return;
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestionIndex] = optionIndex;
     setUserAnswers(newAnswers);
@@ -63,11 +68,12 @@ export default function App() {
   };
 
   const finishQuiz = () => {
+    if (!questions.length) return;
     let correct = 0;
     let wrong = 0;
 
     userAnswers.forEach((answer, index) => {
-      if (answer === questions[index].correctAnswer) {
+      if (answer === questions[index]?.correctAnswer) {
         correct++;
       } else {
         wrong++;
@@ -91,6 +97,7 @@ export default function App() {
     setSelectedSubject(null);
     setResult(null);
     setUserAnswers([]);
+    setCurrentQuestionIndex(0);
   };
 
   return (
@@ -99,7 +106,7 @@ export default function App() {
       {/* Header Navigation */}
       <header className="max-w-7xl w-full mx-auto flex justify-between items-center p-8 md:px-12">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100/50">
             <BrainCircuit className="w-6 h-6" />
           </div>
           <div>
@@ -141,7 +148,7 @@ export default function App() {
                 <div className="inline-flex p-4 bg-indigo-50 border border-indigo-100 rounded-2xl shadow-sm">
                   <Settings className="w-8 h-8 text-indigo-600 animate-spin-slow" />
                 </div>
-                <h2 className="text-5xl font-black text-slate-900 tracking-tight leading-tight max-w-2xl px-4">
+                <h2 className="text-5xl font-black text-slate-900 tracking-tight leading-tight max-w-2xl px-4 text-balance">
                   Sistem Evaluasi Pembelajaran Digital Modern
                 </h2>
                 <p className="text-slate-500 text-lg max-w-xl mx-auto px-6">
@@ -191,9 +198,9 @@ export default function App() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => selectSubject(subject)}
-                      className="group p-8 bg-white border border-slate-200 rounded-[2.5rem] text-left hover:border-indigo-600 hover:shadow-2xl hover:shadow-indigo-50 transition-all flex flex-col gap-8 cursor-pointer"
+                      className="group p-8 bg-white border border-slate-200 rounded-[2.5rem] text-left hover:border-indigo-600 hover:shadow-2xl hover:shadow-indigo-100/10 transition-all flex flex-col gap-8 cursor-pointer"
                     >
-                      <div className={`w-14 h-14 bg-${subject.color}-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-${subject.color}-100 transition-transform group-hover:rotate-6`}>
+                      <div className={`w-14 h-14 bg-${subject.color}-500 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:rotate-6`}>
                         <Icon className="w-7 h-7" />
                       </div>
                       <div className="space-y-3">
@@ -214,7 +221,7 @@ export default function App() {
           )}
 
           {/* --- QUIZ PHASE --- */}
-          {phase === 'QUIZ' && (
+          {phase === 'QUIZ' && currentQuestion && (
             <motion.div
               key="quiz"
               initial={{ opacity: 0 }}
@@ -235,7 +242,7 @@ export default function App() {
                           key={idx}
                           onClick={() => setCurrentQuestionIndex(idx)}
                           className={`aspect-square rounded-lg flex items-center justify-center text-[10px] font-bold shadow-sm transition-all cursor-pointer
-                            ${isCurrent ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 ring-4 ring-indigo-50' : 
+                            ${isCurrent ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100/50 ring-4 ring-indigo-50' : 
                               isComplete ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-400'}
                           `}
                         >
@@ -248,19 +255,19 @@ export default function App() {
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-semibold text-slate-500">Terselesaikan</span>
                       <span className="text-sm font-bold text-slate-800">
-                        {Math.round(((userAnswers.filter(a => a !== null).length) / questions.length) * 100)}%
+                        {questions.length > 0 ? Math.round(((userAnswers.filter(a => a !== null).length) / questions.length) * 100) : 0}%
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                       <div 
                         className="bg-indigo-600 h-full transition-all duration-500" 
-                        style={{ width: `${(userAnswers.filter(a => a !== null).length / questions.length) * 100}%` }}
+                        style={{ width: `${questions.length > 0 ? (userAnswers.filter(a => a !== null).length / questions.length) * 100 : 0}%` }}
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-slate-900 text-white p-7 rounded-[2rem] flex-1 flex flex-col justify-between shadow-2xl shadow-slate-200">
+                <div className="bg-slate-900 text-white p-7 rounded-[2rem] flex-1 flex flex-col justify-between shadow-2xl shadow-slate-200/50">
                   <div>
                     <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2">Evaluasi Aktif</p>
                     <h4 className="text-2xl font-black tracking-tight leading-tight">{selectedSubject?.name}</h4>
@@ -301,12 +308,12 @@ export default function App() {
                           Soal No. {String(currentQuestionIndex + 1).padStart(2, '0')}
                         </span>
                         <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mt-8 tracking-tight leading-[1.15]">
-                          {questions[currentQuestionIndex].question}
+                          {currentQuestion.question}
                         </h2>
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-4 flex-1">
-                        {questions[currentQuestionIndex].options.map((option, idx) => {
+                        {currentQuestion.options.map((option, idx) => {
                           const isSelected = userAnswers[currentQuestionIndex] === idx;
                           return (
                             <button
@@ -314,7 +321,7 @@ export default function App() {
                               onClick={() => handleAnswerSelect(idx)}
                               className={`group p-6 border-2 rounded-2xl text-left flex items-start gap-4 transition-all cursor-pointer
                                 ${isSelected 
-                                  ? 'border-indigo-600 bg-indigo-50 ring-8 ring-indigo-50 shadow-lg shadow-indigo-100' 
+                                  ? 'border-indigo-600 bg-indigo-50 ring-8 ring-indigo-50 shadow-lg shadow-indigo-100/50' 
                                   : 'border-slate-50 bg-slate-50 hover:border-indigo-200 hover:bg-white hover:shadow-lg'
                                 }
                               `}
@@ -379,7 +386,7 @@ export default function App() {
               className="max-w-4xl w-full mx-auto"
             >
               <div className="grid md:grid-cols-12 gap-8">
-                <div className="md:col-span-5 bg-slate-900 text-white p-12 rounded-[2.5rem] flex flex-col justify-center items-center text-center space-y-8 shadow-2xl shadow-slate-200">
+                <div className="md:col-span-5 bg-slate-900 text-white p-12 rounded-[2.5rem] flex flex-col justify-center items-center text-center space-y-8 shadow-2xl shadow-slate-200/50">
                    <div className="relative">
                       <div className="w-24 h-24 bg-indigo-600 rounded-3xl flex items-center justify-center rotate-12 shadow-2xl shadow-indigo-500/20">
                          <Trophy className="w-12 h-12 text-white -rotate-12" />
@@ -431,7 +438,7 @@ export default function App() {
 
                    <div className="grid grid-cols-2 gap-4">
                       <button 
-                        onClick={() => selectSubject(selectedSubject!)}
+                        onClick={() => selectedSubject && selectSubject(selectedSubject)}
                         className="p-8 border-2 border-indigo-600 rounded-[2rem] flex items-center justify-center gap-3 bg-indigo-50 text-indigo-600 font-extrabold uppercase text-xs tracking-widest cursor-pointer hover:bg-indigo-100 transition-colors"
                       >
                          <RotateCcw className="w-5 h-5" />
