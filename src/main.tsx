@@ -1,28 +1,32 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
-import App from './App.tsx';
-import ErrorBoundary from './components/ErrorBoundary.tsx';
+import App from './App';
+import ErrorBoundary from './components/ErrorBoundary';
 import './index.css';
 
-// Global error logging for debugging published white screens
+// Global debug logging
+console.log("React Boot Sequence Started");
+
 window.onerror = (message, source, lineno, colno, error) => {
-  console.error("Global JS Error:", { message, source, lineno, colno, error });
+  console.error("CRITICAL JS ERROR:", { message, source, lineno, colno, error });
 };
 
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
-  console.error("Failed to find root element");
+  console.error("CRITICAL: Root element not found!");
 } else {
   try {
-    createRoot(rootElement).render(
+    const root = createRoot(rootElement);
+    root.render(
       <StrictMode>
         <ErrorBoundary>
           <App />
         </ErrorBoundary>
       </StrictMode>,
     );
+    console.log("React Render Complete");
   } catch (err) {
-    console.error("Critical error during createRoot:", err);
+    console.error("RENDER FAILURE:", err);
   }
 }
