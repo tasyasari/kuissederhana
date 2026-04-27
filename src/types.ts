@@ -2,10 +2,18 @@ export interface Question {
   id: string;
   question: string;
   options: string[];
-  correctAnswer: number; // Index of the correct option
+  correctAnswer: number;
 }
 
-export type QuizPhase = 'MENU' | 'QUIZ' | 'RESULT';
+export type QuizPhase = 'MENU' | 'SUBJECT_SELECTION' | 'QUIZ' | 'RESULT';
+
+export interface Subject {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  color: string;
+}
 
 export interface QuizResult {
   score: number;
