@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Play, 
   LogOut, 
@@ -43,6 +43,7 @@ export default function App() {
   }, [selectedSubject]);
 
   const currentQuestion = useMemo(() => {
+    if (!questions || !questions.length) return null;
     return questions[currentQuestionIndex] || null;
   }, [questions, currentQuestionIndex]);
 
