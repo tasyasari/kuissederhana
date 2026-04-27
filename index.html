@@ -14,7 +14,18 @@
     <div id="root">
       <div class="loading">MEMUAT APLIKASI...</div>
     </div>
-    <script type="module" src="src/main.tsx"></script>
+    <noscript>
+      <div style="padding: 20px; text-align: center; color: red; font-weight: bold;">
+        Aplikasi ini memerlukan JavaScript untuk berjalan.
+      </div>
+    </noscript>
+    <script>
+      console.log("Index.html inline diagnostic: Script loaded");
+      window.addEventListener('load', () => {
+        console.log("Index.html inline diagnostic: Window loaded");
+      });
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
 
