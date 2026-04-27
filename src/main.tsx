@@ -1,32 +1,27 @@
-import {StrictMode} from 'react';
+import React from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import './index.css';
 
-// Global debug logging
-console.log("React Boot Sequence Started");
-
-window.onerror = (message, source, lineno, colno, error) => {
-  console.error("CRITICAL JS ERROR:", { message, source, lineno, colno, error });
-};
+console.log("EduQuiz Pro: Booting...");
 
 const rootElement = document.getElementById('root');
 
-if (!rootElement) {
-  console.error("CRITICAL: Root element not found!");
-} else {
+if (rootElement) {
   try {
     const root = createRoot(rootElement);
     root.render(
-      <StrictMode>
+      <React.StrictMode>
         <ErrorBoundary>
           <App />
         </ErrorBoundary>
-      </StrictMode>,
+      </React.StrictMode>
     );
-    console.log("React Render Complete");
+    console.log("EduQuiz Pro: Rendered");
   } catch (err) {
-    console.error("RENDER FAILURE:", err);
+    console.error("EduQuiz Pro: Render Failure", err);
   }
+} else {
+  console.error("EduQuiz Pro: Root element not found");
 }
