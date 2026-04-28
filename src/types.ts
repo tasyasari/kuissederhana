@@ -3,9 +3,10 @@ export interface Question {
   question: string;
   options: string[];
   correctAnswer: number;
+  explanation?: string;
 }
 
-export type QuizPhase = 'MENU' | 'SUBJECT_SELECTION' | 'QUIZ' | 'RESULT';
+export type QuizPhase = 'MENU' | 'SUBJECT_SELECTION' | 'AI_GENERATION' | 'QUIZ' | 'RESULT';
 
 export interface Subject {
   id: string;

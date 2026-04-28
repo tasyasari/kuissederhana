@@ -15,15 +15,21 @@ import {
   ShieldCheck,
   Save,
   Clock,
-  LayoutDashboard
+  LayoutDashboard,
+  Sparkles,
+  Wand2,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { QUIZ_QUESTIONS, SUBJECTS } from './questions';
-import { QuizPhase, QuizResult, Subject } from './types';
+import { Question, QuizPhase, QuizResult, Subject } from './types';
+import { generateCustomQuiz } from './services/gemini';
 
 const IconMap = {
   BrainCircuit,
   Globe,
-  Calculator
+  Calculator,
+  Sparkles
 };
 
 export default function App() {
@@ -36,11 +42,16 @@ export default function App() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
   const [result, setResult] = useState<QuizResult | null>(null);
+  const [aiTopic, setAiTopic] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
+  const [showExplanation, setShowExplanation] = useState(false);
 
   const questions = useMemo(() => {
+    if (selectedSubject?.id === 'ai-custom') return customQuestions;
     if (!selectedSubject) return [];
     return QUIZ_QUESTIONS[selectedSubject.id] || [];
-  }, [selectedSubject]);
+  }, [selectedSubject, customQuestions]);
 
   const currentQuestion = useMemo(() => {
     if (!questions || !questions.length) return null;
@@ -60,16 +71,43 @@ export default function App() {
   };
 
   const handleAnswerSelect = (optionIndex: number) => {
-    if (!questions.length) return;
+    if (!questions.length || showExplanation) return;
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestionIndex] = optionIndex;
     setUserAnswers(newAnswers);
-    
-    setTimeout(() => {
-      if (currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex(prev => prev + 1);
-      }
-    }, 300);
+    setShowExplanation(true);
+  };
+
+  const handleNextQuestion = () => {
+    setShowExplanation(false);
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else {
+      finishQuiz();
+    }
+  };
+
+  const generateAIQuiz = async () => {
+    if (!aiTopic.trim()) return;
+    setIsGenerating(true);
+    try {
+      const generated = await generateCustomQuiz(aiTopic);
+      setCustomQuestions(generated);
+      setSelectedSubject({
+        id: 'ai-custom',
+        name: `Kuis: ${aiTopic}`,
+        icon: 'Sparkles',
+        description: `Kuis kustom tentang ${aiTopic}`,
+        color: 'indigo'
+      });
+      setUserAnswers(new Array(generated.length).fill(null));
+      setCurrentQuestionIndex(0);
+      setPhase('QUIZ');
+    } catch (err) {
+      alert("Gagal membuat kuis AI. Silakan coba topik lain.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const finishQuiz = () => {
@@ -103,6 +141,9 @@ export default function App() {
     setResult(null);
     setUserAnswers([]);
     setCurrentQuestionIndex(0);
+    setAiTopic('');
+    setCustomQuestions([]);
+    setShowExplanation(false);
   };
 
   return (
@@ -115,7 +156,7 @@ export default function App() {
             <BrainCircuit className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-black uppercase tracking-widest text-slate-800">EduQuiz Pro</h1>
+            <h1 className="text-xl font-black uppercase tracking-widest text-slate-800 font-display">EduQuiz Pro</h1>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Digital Evaluation System v2.1</p>
           </div>
         </div>
@@ -153,7 +194,7 @@ export default function App() {
                 <div className="inline-flex p-4 bg-indigo-50 border border-indigo-100 rounded-2xl shadow-sm">
                   <Settings className="w-8 h-8 text-indigo-600 animate-spin-slow" />
                 </div>
-                <h2 className="text-5xl font-black text-slate-900 tracking-tight leading-tight max-w-2xl px-4 text-balance">
+                <h2 className="text-5xl font-black text-slate-900 tracking-tight leading-tight max-w-2xl px-4 text-balance font-display">
                   Sistem Evaluasi Pembelajaran Digital Modern
                 </h2>
                 <p className="text-slate-500 text-lg max-w-xl mx-auto px-6">
@@ -169,13 +210,69 @@ export default function App() {
                   <Play className="w-5 h-5 fill-current" />
                   Mulai Evaluasi
                 </button>
-                <div className="flex gap-4">
-                   <div className="flex items-center gap-2 px-6 py-5 bg-white border border-slate-200 rounded-2xl">
-                      <ShieldCheck className="w-5 h-5 text-indigo-400" />
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Standar Edukasi</span>
-                   </div>
-                </div>
+                <button
+                  onClick={() => setPhase('AI_GENERATION')}
+                  className="group flex items-center justify-center gap-4 bg-white border-2 border-indigo-600 text-indigo-600 py-5 px-10 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-indigo-50 transition-all active:scale-95 cursor-pointer"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Kustom Kuis AI
+                </button>
               </div>
+            </motion.div>
+          )}
+
+          {/* --- AI GENERATION PHASE --- */}
+          {phase === 'AI_GENERATION' && (
+            <motion.div
+              key="ai-gen"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              className="max-w-2xl mx-auto py-12 space-y-12"
+            >
+              <div className="text-center space-y-4">
+                <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-indigo-100 italic font-black text-white text-2xl">AI</div>
+                <h2 className="text-4xl font-black text-slate-800 tracking-tight font-display">Kuis Kustom Cerdas</h2>
+                <p className="text-slate-500">Tuliskan topik apapun, dan biarkan AI EduQuiz Pro menyusun evaluasi untuk Anda.</p>
+              </div>
+
+              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Topik atau Materi</label>
+                  <input 
+                    type="text"
+                    value={aiTopic}
+                    onChange={(e) => setAiTopic(e.target.value)}
+                    placeholder="Contoh: Tata Surya, Sejarah Majapahit, atau Nutrisi Makanan"
+                    className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-600 focus:bg-white outline-none transition-all font-bold text-slate-700"
+                  />
+                </div>
+
+                <button
+                  onClick={generateAIQuiz}
+                  disabled={isGenerating || !aiTopic.trim()}
+                  className="w-full p-6 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-indigo-100"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Menyusun Pertanyaan...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-5 h-5" />
+                      Bangun Kuis Sekarang
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <button 
+                onClick={() => setPhase('MENU')}
+                className="w-full py-4 text-slate-400 font-bold uppercase tracking-widest text-xs hover:text-slate-600 transition-colors"
+              >
+                Kembali ke Menu Utama
+              </button>
             </motion.div>
           )}
 
@@ -190,7 +287,7 @@ export default function App() {
             >
               <div className="text-center md:text-left">
                 <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-indigo-100">Pilih Materi</span>
-                <h2 className="text-4xl font-black text-slate-800 mt-6 tracking-tight">Pilih Mata Pelajaran</h2>
+                <h2 className="text-4xl font-black text-slate-800 mt-6 tracking-tight font-display">Pilih Mata Pelajaran</h2>
                 <p className="text-slate-500 mt-2">Silakan pilih bidang studi yang ingin Anda evaluasi hari ini.</p>
               </div>
 
@@ -316,7 +413,7 @@ export default function App() {
                         <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-indigo-100">
                           Soal No. {String(currentQuestionIndex + 1).padStart(2, '0')}
                         </span>
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mt-8 tracking-tight leading-[1.15]">
+                        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mt-8 tracking-tight leading-[1.15] font-display">
                           {currentQuestion.question}
                         </h2>
                       </div>
@@ -324,37 +421,65 @@ export default function App() {
                       <div className="grid md:grid-cols-2 gap-4 flex-1">
                         {currentQuestion.options.map((option, idx) => {
                           const isSelected = userAnswers[currentQuestionIndex] === idx;
+                          const isCorrect = idx === currentQuestion.correctAnswer;
+                          const hasAnswered = userAnswers[currentQuestionIndex] !== null;
+
                           return (
                             <button
                               key={idx}
                               onClick={() => handleAnswerSelect(idx)}
                               className={`group p-6 border-2 rounded-2xl text-left flex items-start gap-4 transition-all cursor-pointer
                                 ${isSelected 
-                                  ? 'border-indigo-600 bg-indigo-50 ring-8 ring-indigo-50 shadow-lg shadow-indigo-100/50' 
-                                  : 'border-slate-50 bg-slate-50 hover:border-indigo-200 hover:bg-white hover:shadow-lg'
+                                  ? (isCorrect ? 'border-green-600 bg-green-50' : 'border-red-600 bg-red-50') 
+                                  : (hasAnswered && isCorrect ? 'border-green-600 bg-green-50' : 'border-slate-50 bg-slate-50 hover:border-indigo-200 hover:bg-white')
                                 }
+                                ${hasAnswered ? 'cursor-default pointer-events-none' : ''}
                               `}
                             >
                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black shrink-0 transition-colors
-                                ${isSelected ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-slate-400 group-hover:bg-indigo-600 group-hover:text-white'}
+                                ${isSelected 
+                                  ? (isCorrect ? 'bg-green-600 text-white' : 'bg-red-600 text-white') 
+                                  : (hasAnswered && isCorrect ? 'bg-green-600 text-white' : 'bg-white text-slate-400 group-hover:bg-indigo-600 group-hover:text-white')
+                                }
                               `}>
                                 {String.fromCharCode(65 + idx)}
                               </div>
                               <div className="pt-2">
-                                <p className={`text-base font-bold ${isSelected ? 'text-indigo-900' : 'text-slate-600'}`}>{option}</p>
-                                {isSelected && <p className="text-[10px] text-indigo-500 mt-2 font-black uppercase tracking-tighter">Pilihan Terpilih</p>}
+                                <p className={`text-base font-bold ${isSelected ? 'text-slate-900' : 'text-slate-600'}`}>{option}</p>
                               </div>
                             </button>
                           );
                         })}
                       </div>
+
+                      {showExplanation && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`mt-10 p-8 rounded-3xl border-2 ${userAnswers[currentQuestionIndex] === currentQuestion.correctAnswer ? 'border-green-200 bg-green-50/50' : 'border-red-200 bg-red-50/50'}`}
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className={`p-2 rounded-lg ${userAnswers[currentQuestionIndex] === currentQuestion.correctAnswer ? 'bg-green-500' : 'bg-red-500'} text-white`}>
+                              <AlertCircle className="w-5 h-5" />
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className="font-black text-slate-800 uppercase tracking-widest text-[10px]">
+                                {userAnswers[currentQuestionIndex] === currentQuestion.correctAnswer ? 'Jawaban Benar!' : 'Jawaban Salah!'}
+                              </h4>
+                              <p className="text-sm font-medium text-slate-600 leading-relaxed italic">
+                                {currentQuestion.explanation || `Jawaban yang benar adalah: ${currentQuestion.options[currentQuestion.correctAnswer]}`}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
                     </motion.div>
                   </AnimatePresence>
 
                   {/* Controls */}
                   <div className="flex justify-between items-center mt-12 pt-10 border-t border-slate-100">
                     <button
-                      disabled={currentQuestionIndex === 0}
+                      disabled={currentQuestionIndex === 0 || showExplanation}
                       onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
                       className="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 hover:bg-slate-200 transition-all disabled:opacity-30 cursor-pointer"
                     >
@@ -362,22 +487,18 @@ export default function App() {
                       Sebelumnya
                     </button>
                     <div className="flex gap-4">
-                      {currentQuestionIndex === questions.length - 1 ? (
+                      {showExplanation ? (
                         <button
-                          onClick={finishQuiz}
-                          className="px-10 py-5 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 shadow-2xl shadow-indigo-200 hover:bg-indigo-700 transition-all cursor-pointer"
+                          onClick={handleNextQuestion}
+                          className="px-10 py-5 bg-indigo-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest flex items-center gap-3 shadow-2xl shadow-indigo-200 hover:bg-indigo-700 transition-all cursor-pointer"
                         >
-                          Selesaikan Evaluasi
-                          <Trophy className="w-5 h-5" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
-                          className="px-10 py-5 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 shadow-2xl shadow-indigo-200 hover:bg-indigo-700 transition-all cursor-pointer"
-                        >
-                          Lanjut Soal
+                          {currentQuestionIndex === questions.length - 1 ? 'Lihat Hasil' : 'Lanjut Soal'}
                           <ChevronRight className="w-5 h-5" />
                         </button>
+                      ) : (
+                        <div className="px-10 py-5 bg-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                          Pilih Jawaban
+                        </div>
                       )}
                     </div>
                   </div>

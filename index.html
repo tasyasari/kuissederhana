@@ -5,27 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EduQuiz Pro - Sistem Evaluasi Digital Modern</title>
     <meta name="description" content="Platform evaluasi pembelajaran digital interaktif dengan desain modern dan analisis performa instan." />
-    <style>
-      body { background-color: #F8FAFC; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; }
-      .loading { color: #4F46E5; font-weight: bold; font-size: 14px; letter-spacing: 0.1em; }
-    </style>
   </head>
   <body>
-    <div id="root">
-      <div class="loading">MEMUAT APLIKASI...</div>
-    </div>
+    <div id="root"></div>
     <noscript>
       <div style="padding: 20px; text-align: center; color: red; font-weight: bold;">
         Aplikasi ini memerlukan JavaScript untuk berjalan.
       </div>
     </noscript>
-    <script>
-      console.log("Index.html inline diagnostic: Script loaded");
-      window.addEventListener('load', () => {
-        console.log("Index.html inline diagnostic: Window loaded");
-      });
-    </script>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
 
