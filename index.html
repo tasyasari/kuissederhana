@@ -28,10 +28,10 @@
     </noscript>
     <script>
       window.onerror = function(msg, url, lineNo, columnNo, error) {
-        console.log('Loader Error:', msg);
+        console.error('Critical Error:', msg, 'at', url, 'line', lineNo);
         var errDiv = document.createElement('div');
-        errDiv.style.cssText = 'position:fixed;bottom:10px;left:10px;background:rgba(0,0,0,0.8);color:white;padding:10px;font-size:10px;z-index:99999;';
-        errDiv.innerText = 'System Error: ' + msg;
+        errDiv.style.cssText = 'position:fixed;bottom:10px;left:10px;right:10px;background:rgba(220,38,38,0.95);color:white;padding:15px;font-size:12px;z-index:99999;border-radius:8px;font-family:sans-serif;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);';
+        errDiv.innerHTML = '<div style="font-weight:bold;margin-bottom:4px;">System Failure: ' + msg + '</div><div style="opacity:0.8;font-size:10px;">' + url + ':' + lineNo + '</div>';
         document.body.appendChild(errDiv);
       };
     </script>

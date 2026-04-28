@@ -20,20 +20,24 @@ if (rootElement) {
       </StrictMode>
     );
 
-    // Remove splash screen after a small delay to ensure React has started mounting
-    setTimeout(() => {
+    // Optimized splash removal
+    const removeSplash = () => {
       const splash = document.getElementById('splash');
       if (splash) {
-        console.log("Removing splash screen");
         splash.style.opacity = '0';
-        splash.style.transition = 'opacity 0.5s ease-out';
-        setTimeout(() => splash.remove(), 500);
+        splash.style.transition = 'opacity 0.4s ease-out';
+        setTimeout(() => splash.remove(), 400);
       }
-    }, 100);
+    };
 
-    console.log("EduQuiz Pro: Render triggered");
+    if (document.readyState === 'complete') {
+      setTimeout(removeSplash, 500);
+    } else {
+      window.addEventListener('load', removeSplash);
+      setTimeout(removeSplash, 2000); // Fallback
+    }
   } catch (error) {
-    console.error("EduQuiz Pro: Mount failed", error);
+    console.error("Critical: Render failure", error);
   }
 } else {
   console.error("EduQuiz Pro: Root element not found");
