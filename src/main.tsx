@@ -1,10 +1,10 @@
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App';
-import ErrorBoundary from './components/ErrorBoundary';
+import App from './App.tsx';
+import ErrorBoundary from './components/ErrorBoundary.tsx';
 import './index.css';
 
-console.log("React: Start mounting");
+console.log("EduQuiz Pro: Booting main.tsx");
 
 const rootElement = document.getElementById('root');
 
@@ -12,13 +12,6 @@ if (rootElement) {
   try {
     const root = createRoot(rootElement);
     
-    // Remove splash screen when React is ready to render
-    const splash = document.getElementById('splash');
-    if (splash) {
-      console.log("Removing splash screen");
-      splash.remove();
-    }
-
     root.render(
       <StrictMode>
         <ErrorBoundary>
@@ -26,10 +19,22 @@ if (rootElement) {
         </ErrorBoundary>
       </StrictMode>
     );
-    console.log("React: Render triggered");
+
+    // Remove splash screen after a small delay to ensure React has started mounting
+    setTimeout(() => {
+      const splash = document.getElementById('splash');
+      if (splash) {
+        console.log("Removing splash screen");
+        splash.style.opacity = '0';
+        splash.style.transition = 'opacity 0.5s ease-out';
+        setTimeout(() => splash.remove(), 500);
+      }
+    }, 100);
+
+    console.log("EduQuiz Pro: Render triggered");
   } catch (error) {
-    console.error("React: Mount failed", error);
+    console.error("EduQuiz Pro: Mount failed", error);
   }
 } else {
-  console.error("React: Root element not found");
+  console.error("EduQuiz Pro: Root element not found");
 }
